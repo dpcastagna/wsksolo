@@ -6,6 +6,60 @@ body {
   padding: 10px;
 }
 
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin: 0;
+  padding: 0;
+}
+
+th {
+  background-color: rgb(228, 241, 191);
+  color: black;
+  border-bottom: 1px solid #ccc;
+  font-weight: normal;
+  padding: 0.5em 1em;
+  text-align: left;
+}
+
+td {
+  border-bottom: 1px solid #ccc;
+  padding: 0.5em 1em;
+}
+
+ul {
+  list-style: decimal;
+}
+
+img {
+  width: 100%;
+}
+
+.highlight {
+  background-color: #207dda;
+}
+
+#modal {
+  background-color: rgb(228, 241, 191);
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 5px;
+  text-align: center;
+}
+
+#dialogBox {
+  display: flex;
+  flex-direction: row;
+}
+
+#singleCourse {
+  border-style: solid;
+  border-width: 2px;
+  border-radius: 22px;
+  padding: 4px;
+  margin: 3px;
+}
+
 #nav {
   display: flex;
   flex-direction: row;
@@ -49,10 +103,6 @@ body {
   margin: 8px;
 }
 
-img {
-  width: 100%;
-}
-
 #footer {
   background-color: rgb(14, 12, 12);
   color: white;
@@ -61,7 +111,8 @@ img {
   border-radius: 55px;
   margin-top: 10px;
   margin-bottom: 5px;
-  position: absolute;
+  position: relative;
+  width: auto;
   bottom: 0px;
   padding: 8px;
 }
