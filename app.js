@@ -152,19 +152,19 @@ async function displayRestaurants() {
 
 displayRestaurants();
 
-function showRestaurantsOnMap() {
-  if (apiRestaurants) {
-    for (const res of apiRestaurants) {
-      let marker = L.marker([
-        res.location.coordinates[1],
-        res.location.coordinates[0],
-      ])
-        .addTo(map)
-        .addEventListener("click", () =>
-          marker.bindPopup(
-            `<h3>${res.name}</h3><p>${res.address}, ${res.city}</p>`,
-          ),
-        );
-    }
-  }
-}
+// function showRestaurantsOnMap() {
+//   if (apiRestaurants) {
+//     for (const res of apiRestaurants) {
+//       let marker = L.marker([
+//         res.location.coordinates[1],
+//         res.location.coordinates[0],
+//       ])
+//         .addTo(map)
+//         .addEventListener("click", () =>
+//           marker.bindPopup(
+//             `<h3>${res.name}</h3><p>${res.address}, ${res.city}</p>`,
+//           ),
+//         );
+//     }
+//   }
+// }
