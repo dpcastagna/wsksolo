@@ -123,12 +123,23 @@ async function displayRestaurants() {
       });
       const name = document.createElement("td");
       const address = document.createElement("td");
+      const daily = document.createElement("td");
+      const weekly = document.createElement("td");
+      const dailyButton = document.createElement("button");
+      const weeklyButton = document.createElement("button");
 
       name.textContent = res.name;
       address.textContent = res.address + ", " + res.city;
+      dailyButton.textContent = "Daily";
+      weeklyButton.textContent = "Weekly";
+
+      daily.append(dailyButton);
+      weekly.append(weeklyButton);
 
       row.append(name);
       row.append(address);
+      row.append(daily);
+      row.append(weekly);
       rowList.push(row);
       table.append(row);
 
