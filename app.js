@@ -1,19 +1,19 @@
 "use strict";
 
-let map = L.map("map").setView([60.25, 25], 10);
-
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution:
-    '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-}).addTo(map);
-
 const resApi = "https://media2.edu.metropolia.fi/restaurant/api/v1";
 
 const table = document.getElementsByTagName("table")[0];
 const dialog = document.getElementsByTagName("dialog")[0];
 dialog.setAttribute("id", "modal");
 let rowList = [];
+
+let map = L.map("map").setView([60.25, 24.9], 10);
+
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution:
+    '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+}).addTo(map);
 
 async function fetchRestaurants() {
   const response = await fetch(resApi + "/restaurants");
@@ -25,12 +25,23 @@ async function fetchRestaurants() {
   return await jsonData;
 }
 
-async function fetchMenu(id) {
+async function fetchDaily(id) {
   const response = await fetch(resApi + "/restaurants/daily/" + id + "/en");
 
   if (!response.ok) {
     dialog.showModal();
     throw new Error("Error fetching daily menu: " + response.status);
+  }
+  const jsonData = await response.json();
+  return await jsonData;
+}
+
+async function fetchWeekly(id) {
+  const response = await fetch(resApi + "/restaurants/weekly/" + id + "/en");
+
+  if (!response.ok) {
+    dialog.showModal();
+    throw new Error("Error fetching weekly menu: " + response.status);
   }
   const jsonData = await response.json();
   return await jsonData;
@@ -47,9 +58,8 @@ const renderDailyMenu = (courses) => {
     const price = document.createElement("p");
     const diets = document.createElement("p");
     name.textContent = course.name;
-    price.textContent = "Price: " + course.price;
-    diets.textContent =
-      "Allergens: " + (course.diets === undefined ? "-" : course.diets);
+    price.textContent = `Price: ${!course.price ? "-" : course.price}`;
+    diets.textContent = "Allergens: " + (!course.diets ? "-" : course.diets);
 
     singleCourse.append(name);
     singleCourse.append(price);
@@ -58,6 +68,86 @@ const renderDailyMenu = (courses) => {
   }
   return menuElem;
 };
+
+const renderWeeklyMenu = (days) => {
+  console.log(days);
+  console.log(new Date().getDay());
+  const dayElem = document.createElement("div");
+  const menuElem = document.createElement("div");
+  for (const day of days) {
+    const dayButton = document.createElement("button");
+    // dayButton.setAttribute("id");
+    dayButton.textContent = day.date.slice(0, 3);
+    dayElem.append(dayButton);
+  }
+  const ul = document.createElement("ul");
+  for (const course of days) {
+    const singleCourse = document.createElement("li");
+    singleCourse.setAttribute("id", "singleCourse");
+    const name = document.createElement("p");
+    const price = document.createElement("p");
+    const diets = document.createElement("p");
+    name.textContent = course.name;
+    price.textContent = `Price: ${!course.price ? "-" : course.price}`;
+    diets.textContent = "Allergens: " + (!course.diets ? "-" : course.diets);
+
+    singleCourse.append(name);
+    singleCourse.append(price);
+    singleCourse.append(diets);
+    ul.append(singleCourse);
+  }
+  menuElem.append(ul);
+  return dayElem;
+};
+
+async function buildModal(restaurant, type) {
+  const dialogBox = document.createElement("div");
+  dialogBox.setAttribute("id", "dialogBox");
+
+  const dialogClose = document.createElement("button");
+  const dialogTop = document.createElement("div");
+  const dialogName = document.createElement("p");
+  const dialogAddress = document.createElement("p");
+  const dialogPostal = document.createElement("p");
+  const dialogCity = document.createElement("p");
+  const dialogPhone = document.createElement("p");
+  const dialogCompany = document.createElement("p");
+
+  dialogClose.textContent = "X";
+  dialogClose.setAttribute("id", "dialogClose");
+
+  dialogName.textContent = `Restaurant name: ${restaurant.name}`;
+  dialogAddress.textContent = `Address: ${restaurant.address}, ${restaurant.postalCode}, ${restaurant.city}`;
+  dialogPhone.textContent = `Phone number: ${restaurant.phone}, Company: ${restaurant.company}`;
+  dialogTop.append(dialogClose);
+  dialogTop.append(dialogName);
+  dialogTop.append(dialogAddress);
+  dialogTop.append(dialogPostal);
+  dialogTop.append(dialogCity);
+  dialogTop.append(dialogPhone);
+  dialogTop.append(dialogCompany);
+
+  if (type === "daily") {
+    const menu = await fetchDaily(restaurant._id);
+    const dialogBottom = renderDailyMenu(menu.courses);
+    dialogBox.append(dialogTop);
+    dialogBox.append(dialogBottom);
+  } else {
+    const menu = await fetchWeekly(restaurant._id);
+    const dialogBottom = renderWeeklyMenu(menu.days);
+    dialogBox.append(dialogTop);
+    dialogBox.append(dialogBottom);
+  }
+
+  dialog.replaceChild(dialogBox, dialog.childNodes[0]);
+
+  dialogClose.addEventListener("click", () => {
+    for (const r of rowList) {
+      r.classList.remove("highlight");
+    }
+    dialog.close();
+  });
+}
 
 async function displayRestaurants() {
   try {
@@ -70,57 +160,8 @@ async function displayRestaurants() {
       }
     });
 
-    // showRestaurantsOnMap();
-
     for (const res of apiRestaurants) {
       const row = document.createElement("tr");
-      row.addEventListener("click", async () => {
-        for (const r of rowList) {
-          r.classList.remove("highlight");
-        }
-        row.classList.add("highlight");
-
-        dialog.showModal();
-        dialog.addEventListener("click", () => {
-          dialog.close();
-        });
-
-        const dialogBox = document.createElement("div");
-        dialogBox.setAttribute("id", "dialogBox");
-        const dialogLeft = document.createElement("div");
-        const dialogName = document.createElement("p");
-        const dialogAddress = document.createElement("p");
-        const dialogPostal = document.createElement("p");
-        const dialogCity = document.createElement("p");
-        const dialogPhone = document.createElement("p");
-        const dialogCompany = document.createElement("p");
-        const dialogEmpty = document.createElement("p");
-        const dialogClose = document.createElement("p");
-
-        dialogName.textContent = "Restaurant name: " + res.name;
-        dialogAddress.textContent = "Address: " + res.address;
-        dialogPostal.textContent = "Postal code: " + res.postalCode;
-        dialogCity.textContent = "City: " + res.city;
-        dialogPhone.textContent = "Phone number: " + res.phone;
-        dialogCompany.textContent = "Company: " + res.company;
-        dialogEmpty.innerHTML = "&nbsp;";
-        dialogClose.textContent = "CLICK ANYWHERE TO CLOSE";
-        dialogLeft.append(dialogName);
-        dialogLeft.append(dialogAddress);
-        dialogLeft.append(dialogPostal);
-        dialogLeft.append(dialogCity);
-        dialogLeft.append(dialogPhone);
-        dialogLeft.append(dialogCompany);
-        dialogLeft.append(dialogEmpty);
-        dialogLeft.append(dialogClose);
-
-        const menu = await fetchMenu(res._id);
-        const dialogRight = renderDailyMenu(menu.courses);
-
-        dialogBox.append(dialogLeft);
-        dialogBox.append(dialogRight);
-        dialog.replaceChild(dialogBox, dialog.childNodes[0]);
-      });
       const name = document.createElement("td");
       const address = document.createElement("td");
       const daily = document.createElement("td");
@@ -128,10 +169,26 @@ async function displayRestaurants() {
       const dailyButton = document.createElement("button");
       const weeklyButton = document.createElement("button");
 
+      dailyButton.addEventListener("click", async () => {
+        row.classList.add("highlight");
+
+        dialog.showModal();
+        buildModal(res, "daily");
+      });
+
+      weeklyButton.addEventListener("click", async () => {
+        row.classList.add("highlight");
+
+        dialog.showModal();
+        buildModal(res, "weekly");
+      });
+
       name.textContent = res.name;
       address.textContent = res.address + ", " + res.city;
       dailyButton.textContent = "Daily";
+      dailyButton.setAttribute("id", "tableCustom");
       weeklyButton.textContent = "Weekly";
+      weeklyButton.setAttribute("id", "tableCustom");
 
       daily.append(dailyButton);
       weekly.append(weeklyButton);
